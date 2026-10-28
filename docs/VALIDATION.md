@@ -4,6 +4,7 @@
 
 - 21 Python tests and 17 Node analysis/CSV tests passed locally.
 - A later repeat on Windows exposed a test-only fixed-40-ms scheduling assumption in the fake-PCAN receive check. The test now waits for actual decoded coverage with a bounded 3-second deadline; the same condition-based wait is used for asynchronous demo/virtual reception. Protocol behavior and receive-only safeguards are unchanged.
+- **Final platform verification:** [run 40759080275](https://github.com/DaniilKi/tesla-bms-studio/actions/runs/40759080275) completed successfully on both Windows and Ubuntu against `ec83370807d99607c4906e76ff10c1754e03789d`. Each platform passed all 21 Python and 17 Node tests, compilation and demo build. Subsequent changes only record receipts in documentation.
 - [GitHub Actions run](https://github.com/DaniilKi/tesla-bms-studio/actions/runs/40757343783): both `software (windows-latest)` and `software (ubuntu-latest)` completed successfully against application commit `02a35387b5147e52ead29b41dacb1bb815ea2797`. Each ran the 21 + 17 tests, compilation and static demo build.
 - Profile coverage checks include 83, 84, 96 and unknown counts; 60/70/75/85/90/100 metadata is tested independently. An out-of-profile channel suppresses the full-pack sum comparison.
 - Hosted-build browser demo: 96/96 group resistance estimates after the synthetic 0→50 A step; first group approximately 0.250 mΩ, correctly tagged synthetic. CSV was downloaded and its headers/source/raw pair verified.
