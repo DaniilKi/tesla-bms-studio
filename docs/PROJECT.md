@@ -13,7 +13,7 @@ Build an approachable local diagnostic app for a legacy Tesla Model S battery re
 - Read voltages for each series-connected cell group through BMS/CAN.
 - Target a pre-2016 Model S bench battery and an existing PCAN-USB.
 - Provide a practical interface for someone uncomfortable with terminal commands.
-- Collaborate with a friend. The owner requests full repository access; the username remains pending.
+- Collaborate with `GragTesla-blip`. The owner requested full repository access; current invitation status is recorded below.
 - Preserve scope and unresolved decisions so development can continue without reconstructing the conversation.
 
 Specific battery capacity, part number, BMS firmware, actual host OS and successful adapter detection are not confirmed. The pasted discussion switched from Windows to Linux and referred to Ubuntu 16.04 screenshots; those screenshots were not included. Do not turn that earlier assistant interpretation into verified inventory.
@@ -93,4 +93,4 @@ Python 3.10+, `python-can`, `aiohttp` and plain HTML/CSS/JavaScript. Reuse upstr
 
 Repository: https://github.com/DaniilKi/tesla-bms-studio — public, as a fork of public upstream. Do not commit private captures, serial numbers, VINs, credentials or the private source conversation.
 
-Requested friend role: full repository access. A personal repository has one owner. GitHub's published docs and reported API role behavior differ; verify the actual invitation and accepted permission rather than promising co-ownership. Do not create an organization or transfer ownership without a separate request.
+Requested friend role: full repository access. On 2026-10-28, GitHub rejected assigning `admin` to `GragTesla-blip` on this personal repository. A read/write collaborator invitation was then sent and read back with permission `write`; acceptance is pending. This permits code contributions after acceptance but does not grant owner/admin control. Do not create an organization or transfer ownership without a separate request.

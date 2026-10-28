@@ -12,4 +12,4 @@ Do not commit private captures, serial numbers, VINs, authentication or source c
 
 ## Friend's access
 
-Owner requests full repository access; username pending. Verify the exact account, invitation role and eventual accepted permission before reporting completion. Repository admin does not mean shared ownership of the personal GitHub account.
+On 2026-10-28, `GragTesla-blip` was invited with read/write collaborator access. GitHub rejected the requested `admin` role for this personal repository; the pending invitation was read back with permission `write`. Acceptance is not yet confirmed. Read back the accepted permission before reporting active access. The personal repository remains owned by DaniilKi.

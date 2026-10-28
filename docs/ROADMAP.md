@@ -33,8 +33,9 @@
 
 ## Collaboration dependency
 
-- [ ] Obtain friend's GitHub username and verify the account.
-- [ ] Invite to this fork with requested full repository access where supported.
-- [ ] Read back pending role, then accepted permission. Invitation and acceptance are separate states.
+- [x] Verify friend's account: `GragTesla-blip`.
+- [x] Send contributor invitation; GitHub rejected `admin`, then accepted `push` as a pending invitation with permission `write` (2026-10-28).
+- [x] Read back pending invitation with permission `write`.
+- [ ] Friend accepts; verify active collaborator permission. Invitation and acceptance are separate states.
 
 These dependencies do not block interface development. They do block claims of working physical diagnostics or completed contributor access.
