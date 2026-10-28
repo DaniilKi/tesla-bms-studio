@@ -128,6 +128,14 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
     async def post(self, path, body):
         return await self.client.post(path, json=body, headers={"Origin": self.origin})
 
+    async def wait_for_coverage(self, expected):
+        async def received():
+            while self.connection.snapshot()["coverage"] != expected:
+                if self.connection.status == "error":
+                    self.fail(self.connection.error)
+                await asyncio.sleep(0.01)
+        await asyncio.wait_for(received(), timeout=3)
+
     async def test_starts_disconnected_without_opening_hardware(self):
         with patch("studio.app.can.Bus") as factory:
             response = await self.client.get("/api/state")
@@ -140,7 +148,7 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
         with patch("studio.app.can.Bus") as factory:
             response = await self.post("/api/connect", {"mode": "demo"})
             self.assertEqual(response.status, 200)
-            await asyncio.sleep(0.02)
+            await self.wait_for_coverage(96)
             state = await (await self.client.get("/api/state")).json()
             self.assertEqual(state["coverage"], 96)
             self.assertEqual(state["temperature_coverage"], 32)
@@ -181,7 +189,7 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
     async def test_capacity_range_profile_and_demo_only_controls(self):
         for capacity in (60,70,75,85,90,100):
             response=await self.post("/api/connect", {"mode":"demo","profile_id":"legacy84","capacity_kwh":capacity})
-            await asyncio.sleep(0.01)
+            await self.wait_for_coverage(84)
             result=await (await self.client.get("/api/state")).json()
             self.assertEqual(result["capacity_kwh"],capacity)
             self.assertEqual(result["coverage"],84)
@@ -192,7 +200,7 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_reconnect_changes_session_and_clears_current_history(self):
         await self.post("/api/connect",{"mode":"demo"})
-        await asyncio.sleep(0.01)
+        await self.wait_for_coverage(96)
         old=self.connection.session_id
         await self.post("/api/connect",{"mode":"demo","profile_id":"legacy83","capacity_kwh":100})
         self.assertNotEqual(old,self.connection.session_id)
@@ -219,7 +227,7 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
         bus = ReceiveOnlyBus()
         with patch("studio.app.can.Bus", return_value=bus) as factory:
             await self.post("/api/connect", {"mode": "pcan", "channel": "PCAN_USBBUS1", "profile_confirmed": True})
-            await asyncio.sleep(0.04)
+            await self.wait_for_coverage(4)
             factory.assert_called_once_with(interface="pcan", channel="PCAN_USBBUS1",
                 ignore_config=True, bitrate=500000, state=can.BusState.PASSIVE)
             self.assertEqual(self.connection.snapshot()["coverage"], 4)
@@ -235,7 +243,7 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
             with patch("studio.app.can.Bus", return_value=receiver):
                 await self.post("/api/connect", {"mode": "socketcan", "channel": "can0", "profile_confirmed": True})
             sender.send(mux_frame(0, [12000] * 4))
-            await asyncio.sleep(0.05)
+            await self.wait_for_coverage(4)
             self.assertEqual(self.connection.snapshot()["coverage"], 4)
             await self.post("/api/disconnect", {})
         finally:
