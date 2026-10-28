@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tesla BMS Studio</title>
+    <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">B<span>∿</span>S <strong>STUDIO</strong></a>
+      <span class="header-note">LEGACY MODEL S / BENCH DIAGNOSTICS</span>
+      <span class="version">FOUNDATION · 0.1</span>
+    </header>
+    <main>
+      <aside>
+        <div class="eyebrow">01 / DATA SOURCE</div>
+        <h1>Connect. <br />See every brick.</h1>
+        <p class="intro">
+          A local workspace for your PCAN-USB and legacy Tesla battery data.
+        </p>
+        <form id="connection">
+          <label for="mode">Connection</label>
+          <select id="mode">
+            <option value="demo">Demo · no hardware</option>
+            <option value="socketcan">Linux · SocketCAN</option>
+            <option value="pcan">Windows · PCAN-Basic</option>
+          </select>
+          <div id="hardware" hidden>
+            <label for="channel">CAN channel</label>
+            <input
+              id="channel"
+              value="can0"
+              maxlength="32"
+              spellcheck="false"
+            />
+            <div class="settings">
+              <span>Legacy 85/90 profile</span
+              ><strong>500 kbit/s · CAN 2.0</strong>
+            </div>
+            <p id="driver-note" class="small"></p>
+            <label class="check"
+              ><input id="confirmed" type="checkbox" /><span
+                >I have verified the pack/profile, low-voltage connection and
+                bus configuration.</span
+              ></label
+            >
+          </div>
+          <button id="connect" type="submit">Start demo <span>↗</span></button>
+          <button id="disconnect" class="secondary" type="button" disabled>
+            Disconnect
+          </button>
+        </form>
+        <div id="error" role="alert" hidden></div>
+        <div class="scope">
+          <span class="dot"></span><strong>Receive-only application</strong>
+          <p>
+            No wake-up frames, fault clearing or contactor commands. A sleeping
+            BMS may produce no data.
+          </p>
+        </div>
+        <details>
+          <summary>Before connecting a real pack</summary>
+          <p>
+            This interface does not validate wiring or make an HV pack safe.
+            Confirm the exact pack revision and use a qualified HV technician.
+            No contactor closure is required for the intended monitoring task.
+          </p>
+        </details>
+        <div class="credit">
+          Based on
+          <a
+            href="https://github.com/jetpax/PiCanScanMyTesla"
+            target="_blank"
+            rel="noreferrer"
+            >PiCanScanMyTesla ↗</a
+          ><br />Independent project · MIT license
+        </div>
+      </aside>
+      <section class="workspace" aria-label="Battery readings">
+        <div class="workspace-heading">
+          <div>
+            <div class="eyebrow">02 / BATTERY OVERVIEW</div>
+            <h2>Pack workspace</h2>
+          </div>
+          <span id="status" class="badge" role="status">Disconnected</span>
+        </div>
+        <div id="demo-banner" class="demo-banner" hidden>
+          SYNTHETIC DEMO <span>Generated values. No battery connected.</span>
+        </div>
+        <div class="metrics">
+          <article>
+            <span>PACK VOLTAGE</span><strong id="pack">—</strong
+            ><small>V · broadcast measurement</small>
+          </article>
+          <article>
+            <span>BRICK SPREAD</span><strong id="spread">—</strong
+            ><small>mV · across fresh readings</small>
+          </article>
+          <article>
+            <span>FRESH BRICKS</span><strong id="coverage">0 <i>/ 96</i></strong
+            ><small id="temp-coverage">0 / 32 temperature channels</small>
+          </article>
+        </div>
+        <div class="section-heading">
+          <h3>Voltage map</h3>
+          <span>16 logical modules · 6 bricks each</span>
+        </div>
+        <p class="small layout-note">
+          Logical grouping from the legacy profile; physical pack layout and
+          compatibility need confirmation.
+        </p>
+        <div id="modules" class="modules"></div>
+        <div class="readout">
+          <div>
+            <span>LOWEST / HIGHEST</span><strong id="range">— / — V</strong>
+          </div>
+          <div>
+            <span>PACK − SUM OF BRICKS</span><strong id="difference">—</strong
+            ><small>Requires 96 fresh bricks + pack voltage</small>
+          </div>
+          <div>
+            <span>RECEIVED CAN FRAMES</span><strong id="frames">0</strong
+            ><small id="age">No frames received</small>
+          </div>
+        </div>
+        <footer>
+          <p>
+            Missing and stale readings remain blank. Values expire after 45
+            seconds. Readings do not establish pack health.
+          </p>
+          <a class="export" href="/api/snapshot.csv">↓ Export snapshot CSV</a>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>
