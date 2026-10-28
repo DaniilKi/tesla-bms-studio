@@ -4,6 +4,18 @@ Published 2026-10-28: **https://tesla-bms-studio-daniil.daniilk.chatgpt.site/**
 
 Audience: **public**, explicitly selected by the owner; platform access policy revision 2. Unauthenticated HTTPS returned 200 for the dashboard and its synthetic runtime, with no sign-in redirect.
 
+## Current publication — version 3
+
+- Published 2026-10-28, same public URL and audience.
+- Saved version: `appgprj_6ae24dac714881918ac12a6bb13e3f90~appgver_0396e3ad80f4819180dea27b7a0a1bd2`.
+- Successful deployment: `appgdep_6ae25caae0e48191be8b7516f51c5320`.
+- Site source commit: `95cdc53ca86d1f72ed01486a9a41be089d2a80e7`.
+- Application build source: `de76b8641c337f7c921ddcc5e8df1611553380ed`.
+- HTTPS `BUILD.json` read-back reports version 0.3, hardware access false. Anonymous deployed-browser checks passed across all four tabs, demo CAC, VSH CSV roundtrip, Ah download, apparent-resistance regression and mobile layout/hints.
+- No physical measurements, user screenshot or private source conversation were published. VSH fixtures are synthetic; live VSH remains unavailable.
+
+## Previous publication — version 2
+
 - Site project: `appgprj_6ae24dac714881918ac12a6bb13e3f90`.
 - Saved/deployed version (version 2): `appgprj_6ae24dac714881918ac12a6bb13e3f90~appgver_9bd856a4ed4881919af174a4710067bf`.
 - Successful deployment: `appgdep_6ae2545ecf108191852899a32bdbbb32`.

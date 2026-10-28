@@ -6,7 +6,9 @@
 - Browser QA passed on the static hosted build at 1440×1100 and 390×844, with no horizontal overflow or page errors. All four tabs, hover hints, Escape, mobile hint bounds, CSV VSH roundtrip, capacity CSV download and 96/96 apparent-resistance regression were exercised.
 - Local Python UI: 100 kWh metadata with independent 84-group profile returned CAC demo 270.2 Ah; current-step recording advanced the session counter; demo VSH rendered 14×7 channels. Disconnect cleared CAC/session/VSH. Hardware selection without confirmation stayed disconnected with no VSH values. Keyboard hints and repeat-click dismissal passed.
 - Numeric examples above are synthetic fixtures, not measured pack results. Live VSH decoding and physical CAC agreement remain unverified.
-- Platform CI and publication receipts are recorded after their live read-back in this file and DEPLOYMENT.md.
+- [Platform CI run 40764568999](https://github.com/DaniilKi/tesla-bms-studio/actions/runs/40764568999) passed on **Windows and Ubuntu**, application commit `de76b8641c337f7c921ddcc5e8df1611553380ed`: all 29 Python + 23 Node tests, compilation and static build on each platform.
+- Public Site version 3 deployed successfully; the same browser checks passed against the anonymous production URL. `BUILD.json` returned version 0.3 with hardware access false. See [publication receipt](DEPLOYMENT.md).
+- Local UI QA used a temporary current-code server on port 8770. Automatic approval review rejected restarting the pre-existing port-8765 process, which remains unchanged; its backend requires a restart to load the new decoder. This does not affect the public demo or downloadable source.
 
 ## Version 0.2: cross-platform and hosted demo
 
