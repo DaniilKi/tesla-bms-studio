@@ -1,0 +1,30 @@
+[
+  {
+    "id": "legacy_unknown",
+    "label": "Legacy · число групп неизвестно",
+    "brick_count": 96,
+    "temp_count": 32,
+    "expected_count": null
+  },
+  {
+    "id": "legacy83",
+    "label": "Legacy · 83 группы (проверить ревизию)",
+    "brick_count": 83,
+    "temp_count": 28,
+    "expected_count": 83
+  },
+  {
+    "id": "legacy84",
+    "label": "Legacy · 84 группы / 14 модулей",
+    "brick_count": 84,
+    "temp_count": 28,
+    "expected_count": 84
+  },
+  {
+    "id": "legacy96",
+    "label": "Legacy · 96 групп / 16 модулей",
+    "brick_count": 96,
+    "temp_count": 32,
+    "expected_count": 96
+  }
+]

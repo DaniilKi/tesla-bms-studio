@@ -25,8 +25,8 @@ class DecoderTests(unittest.TestCase):
     def test_brick_positions_and_scaling(self):
         self.decoder.feed(mux_frame(23, [12000, 12001, 12002, 12003]))
         result = self.decoder.snapshot()
-        self.assertEqual(result["bricks"][92], 3.66)
-        self.assertEqual(result["bricks"][95], 3.6609)
+        self.assertEqual(result["bricks"][92], 3.662109)
+        self.assertEqual(result["bricks"][95], 3.663025)
         self.assertEqual(result["coverage"], 4)
         self.assertIsNone(result["sum_v"])
 
@@ -47,7 +47,7 @@ class DecoderTests(unittest.TestCase):
         self.now += 40
         self.decoder.feed(mux_frame(0, [12000, 0, 0x3FFF, 0]))
         self.now += 6
-        self.assertEqual(self.decoder.snapshot()["bricks"][:4], [3.66, None, None, None])
+        self.assertEqual(self.decoder.snapshot()["bricks"][:4], [3.662109, None, None, None])
 
     def test_pack_invalid_and_stale(self):
         self.decoder.feed(can.Message(arbitration_id=0x102, data=[0x10, 0x9C, 10, 0], is_extended_id=False))
@@ -70,8 +70,47 @@ class DecoderTests(unittest.TestCase):
         for mux in range(24):
             self.decoder.feed(mux_frame(mux, [12000] * 4))
         self.decoder.feed(can.Message(arbitration_id=0x102, data=[0x10, 0x9C, 0, 0], is_extended_id=False))
-        self.assertEqual(self.decoder.snapshot()["sum_v"], 351.36)
-        self.assertEqual(self.decoder.snapshot()["unmeasured_v"], 48.16)
+        self.assertEqual(self.decoder.snapshot()["sum_v"], 351.56)
+        self.assertEqual(self.decoder.snapshot()["unmeasured_v"], 47.96)
+
+    def test_profiles_are_independent_from_capacity_and_extra_channels(self):
+        for profile, count in (("legacy83", 83), ("legacy84", 84), ("legacy96", 96)):
+            decoder = Decoder(profile_id=profile)
+            for mux in range(24):
+                decoder.feed(mux_frame(mux, [12000 if mux*4+k<count else 0 for k in range(4)]))
+            snapshot = decoder.snapshot()
+            self.assertEqual(snapshot["coverage"], count)
+            self.assertEqual(len(snapshot["bricks"]), count)
+            self.assertIsNotNone(snapshot["sum_v"])
+        decoder = Decoder(profile_id="legacy84")
+        decoder.feed(mux_frame(23, [12000]*4))
+        self.assertEqual(decoder.snapshot()["outside_profile_bricks"], [93,94,95,96])
+        self.assertIsNone(decoder.snapshot()["sum_v"])
+
+    def test_unknown_profile_never_claims_complete_coverage(self):
+        decoder = Decoder(profile_id="legacy_unknown")
+        for mux in range(24):
+            decoder.feed(mux_frame(mux,[12000]*4))
+        self.assertEqual(decoder.snapshot()["coverage"],96)
+        self.assertIsNone(decoder.snapshot()["sum_v"])
+
+    def test_current_pairing_and_isolation_are_distinct(self):
+        for stamp in (99.9, 100.1):
+            self.now=stamp
+            self.decoder.feed(can.Message(arbitration_id=0x102,data=[0,0,0xF4,1],is_extended_id=False))
+        self.now=100.0
+        self.decoder.feed(mux_frame(0,[12000]*4))
+        self.decoder.feed(can.Message(arbitration_id=0x212,data=[0,0,0,10],is_extended_id=False))
+        snapshot=self.decoder.snapshot()
+        self.assertEqual(snapshot["samples"][0]["current_a"],50)
+        self.assertEqual(snapshot["samples"][0]["current_samples"],2)
+        self.assertEqual(snapshot["isolation_kohm"],200)
+
+    def test_late_current_does_not_become_a_synchronized_sample(self):
+        self.decoder.feed(mux_frame(0,[12000]*4))
+        self.now+=1
+        self.decoder.feed(can.Message(arbitration_id=0x102,data=[0]*8,is_extended_id=False))
+        self.assertIsNone(self.decoder.snapshot()["samples"][0]["current_a"])
         self.now += 46
         self.assertIsNone(self.decoder.snapshot()["unmeasured_v"])
 
@@ -138,6 +177,26 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
         for route in ("/vehicle", "/clearfault", "/readdtc"):
             response = await self.post(route, {})
             self.assertEqual(response.status, 404)
+
+    async def test_capacity_range_profile_and_demo_only_controls(self):
+        for capacity in (60,70,75,85,90,100):
+            response=await self.post("/api/connect", {"mode":"demo","profile_id":"legacy84","capacity_kwh":capacity})
+            await asyncio.sleep(0.01)
+            result=await (await self.client.get("/api/state")).json()
+            self.assertEqual(result["capacity_kwh"],capacity)
+            self.assertEqual(result["coverage"],84)
+        for body in ({"mode":"demo","capacity_kwh":101}, {"mode":"demo","profile_id":[]}, {"mode":"demo","capacity_kwh":True}):
+            self.assertEqual((await self.post("/api/connect",body)).status,400)
+        await self.post("/api/disconnect",{})
+        self.assertEqual((await self.post("/api/demo",{"current_a":50})).status,403)
+
+    async def test_reconnect_changes_session_and_clears_current_history(self):
+        await self.post("/api/connect",{"mode":"demo"})
+        await asyncio.sleep(0.01)
+        old=self.connection.session_id
+        await self.post("/api/connect",{"mode":"demo","profile_id":"legacy83","capacity_kwh":100})
+        self.assertNotEqual(old,self.connection.session_id)
+        self.assertEqual(self.connection.decoder.profile["brick_count"],83)
 
     async def test_pcan_requests_passive_mode_and_never_sends(self):
         class ReceiveOnlyBus:

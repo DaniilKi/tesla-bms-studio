@@ -1,12 +1,21 @@
 # Tesla BMS Studio
 
-A local interface for reading legacy Tesla Model S battery brick voltages through a PCAN-USB adapter. Independent project owned by [DaniilKi](https://github.com/DaniilKi), forked from [jetpax/PiCanScanMyTesla](https://github.com/jetpax/PiCanScanMyTesla). Original MIT license and attribution are preserved.
+Локальный клиент Windows/Linux и онлайн-демо диагностики Tesla Model S. Целевая линейка: **60, 70, 75, 85, 90 и 100 кВт·ч**. Чтение напряжений групп через PCAN-USB, температура, ток и экспорт расчётного сопротивления. Независимый MIT-форк [jetpax/PiCanScanMyTesla](https://github.com/jetpax/PiCanScanMyTesla), владелец — [DaniilKi](https://github.com/DaniilKi).
 
-**Status: working software foundation; physical PCAN/battery compatibility has not been verified.**
+**Версия 0.2.** Есть профили 83/84/96 групп и режим просмотра неизвестного блока. Ёмкость и профиль выбираются отдельно. Реальное подключение каждой ревизии требует проверки: выбор «100» не доказывает совместимость любого блока 100 кВт·ч, а протоколы 2021+ не реализованы.
 
 ![Tesla BMS Studio with synthetic demo readings](img/studio-demo.png)
 
 ## Start the new app
+
+### Простой запуск
+
+Скачайте [ZIP исходного кода](https://github.com/DaniilKi/tesla-bms-studio/archive/refs/heads/main.zip) и распакуйте:
+
+- **Windows:** двойной щелчок `start-windows.cmd`.
+- **Linux:** `bash start-linux.sh` из папки приложения.
+
+Нужен Python 3.10+. Первый запуск создаёт `.venv` и устанавливает Python-зависимости, затем открывает браузер. Драйверы и CAN-настройки он не меняет. Для Windows PCAN нужны официальный драйвер PEAK и PCAN-Basic. В Linux используется заранее настроенный SocketCAN. Python-зависимости фиксированы в `requirements.txt`.
 
 Requires Python 3.10 or newer. No administrator account or battery is needed for the demo.
 
@@ -30,20 +39,24 @@ python3 -m venv .venv
 .venv/bin/python -m studio.app
 ```
 
-Open **http://127.0.0.1:8080** and click **Start demo**. Stop the server with Ctrl+C. Use `--port 8081` if the default port is occupied.
+Откройте **http://127.0.0.1:8080** и нажмите **Запустить демо**. Остановка: Ctrl+C. Для другого порта: `python -m studio.app --port 8081` из подготовленного окружения.
 
 ## What works
 
 - Demo with synthetic CAN-format data; no CAN device is opened.
 - Connection form for Linux SocketCAN (`can0`) and Windows PCAN-Basic (`PCAN_USBBUS1`).
-- 96 brick readings, 32 temperatures, pack voltage, minimum/maximum, spread and coverage.
+- Независимые настройки ёмкости 60–100 кВт·ч и профиля 83/84/96 групп; карта без жёсткой привязки к 96.
+- Напряжение, ток, температуры, минимум/максимум, разброс и полнота данных. Температурная карта унаследована и предварительна.
 - Missing/stale readings, with individual signals expiring after 45 seconds.
-- CSV snapshot export, tagged with its source mode and connection state.
-- Localhost-only service. No cloud, accounts or telemetry.
+- Два измерения A/B и **оценка кажущегося сопротивления группы** `−ΔV/ΔI` с проверкой знака, тока и времён.
+- CSV исходных измерений и CSV оценки R: обе пары V/I, отметки времени, условия и причины пропусков. Импорт этой пары обрабатывается только в браузере.
+- Локальный CAN-сервис доступен только на localhost. Онлайн-демо использует синтетические данные и не имеет доступа к USB-CAN.
+
+**Прямой сигнал внутреннего сопротивления группы из BMS пока не подтверждён.** Приложение не вычисляет R из одного вольтажа и не выдаёт сопротивление изоляции или проводов VSH за сопротивление ячеек. У группы параллельно соединённых ячеек измеряется общий отклик; это не R каждой физической ячейки. Расчёт — экспериментальная оценка, а не стандартизованный DCIR-тест. Подробности и источники: [60–100 кВт·ч и сопротивление](docs/MULTIPACK_AND_RESISTANCE.md).
 
 The app starts disconnected. It never sends application CAN frames. PCAN opens with `BusState.PASSIVE`. SocketCAN uses the existing Linux controller configuration; opening a socket does **not** enforce hardware listen-only or set bitrate. The operator must verify those settings outside the app. A sleeping bench BMS may remain silent; silence alone is not a failed battery or adapter.
 
-For Windows, install the official PEAK driver and matching PCAN-Basic runtime separately. For Linux, use an existing SocketCAN interface and verify controller configuration. This app does not install drivers or change system networking. The initial profile assumes classic 11-bit CAN and 500 kbit/s, based on upstream observations for legacy Model S 85/90 packs. Exact pack compatibility remains to be established.
+Профили относятся к семейству legacy S/X 2012–2020: classic 11-bit CAN, 500 kbit/s. Ревизии блока, формат 0x6F2 и число каналов проверяются отдельно. Аппаратной проверки PCAN/батареи в этой разработке не было.
 
 ## Project documents
 
@@ -64,6 +77,8 @@ Root `teslamon.py`, `index.html`, `install.sh`, `systemd/` and `NOTES.md` are re
 ```
 
 On Linux, use `.venv/bin/python` instead. Tests cover decoding, invalid/stale signals, input boundaries, demo isolation, PCAN passive initialization, disconnect and simulated CAN reception. Hardware testing is separate.
+
+Расчёт и CSV также проверяются командой `node --test tests/analysis.test.mjs` (Node 22+). GitHub Actions запускает обе проверки на Windows и Linux; аппаратное подключение в CI не проверяется.
 
 ## License
 

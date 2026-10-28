@@ -1,5 +1,14 @@
 # Development plan
 
+## Version 0.2 — expanded scope
+
+- [x] Independent 60/70/75/85/90/100 kWh metadata and 83/84/96/unknown series profiles.
+- [x] Apparent group resistance estimator, quality reasons and before/after CSV export/import.
+- [x] Explicit separation of group R, VSH and HV isolation; no invented direct BMS R signal.
+- [x] Windows/Linux launchers and shared static browser UI.
+- [x] Browser-only online demo built from the same interface.
+- [ ] Physical acceptance for each exact pack/protocol/driver combination; see MULTIPACK_AND_RESISTANCE.md.
+
 ## Foundation delivered
 
 - [x] Owned fork, upstream history and MIT attribution.
