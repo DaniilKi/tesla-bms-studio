@@ -6,14 +6,16 @@ Defined: 2026-10-28. Working name; branding can change without changing the scop
 
 ## Purpose
 
-Build an approachable local diagnostic app for a legacy Tesla Model S battery removed from the vehicle and connected through the owner's PEAK PCAN-USB. Replace terminal-heavy setup with a clear connection workflow and useful voltage/temperature views. Help an operator inspect BMS readings and identify patterns requiring investigation, without presenting observations as a conclusive battery diagnosis.
+Build an approachable Windows/Linux diagnostic app for legacy Tesla Model S battery families 60–100 kWh, removed from the vehicle and connected through PCAN-USB, plus a public online dashboard demo. Replace terminal-heavy setup with a clear connection workflow, voltage/temperature views and apparent group-resistance export. Keep physical measurements, calculated estimates and synthetic data distinct; observations are not a conclusive battery diagnosis.
 
 ## User intent and requirements
 
 - Start an independently developed app on top of PiCanScanMyTesla.
 - Keep an owned GitHub fork with upstream history and MIT attribution.
 - Read voltages for each series-connected cell group through BMS/CAN.
-- Target a pre-2016 Model S bench battery and an existing PCAN-USB.
+- Target legacy Model S bench batteries in the 60/70/75/85/90/100 kWh families and PCAN-USB, with independent revision/series profiles.
+- Export resistance information: direct BMS values only when a verified signal exists; current implementation supplies a labeled apparent ΔV/ΔI estimate with the original pair and quality reasons.
+- Provide Windows/Linux launchers and a public browser-only online demo.
 - Provide a practical interface for someone uncomfortable with terminal commands.
 - Collaborate with `GragTesla-blip`. The owner requested full repository access; current invitation status is recorded below.
 - Preserve scope and unresolved decisions so development can continue without reconstructing the conversation.
@@ -43,7 +45,7 @@ Specific battery capacity, part number, BMS firmware, actual host OS and success
 
 ## Initial compatibility profile
 
-Legacy Model S 85/90 profile derived from upstream observations: 96 bricks, 32 temperatures, classic 11-bit CAN, 500 kbit/s. Pre-2016 manufacture alone does not establish compatibility. Other capacities, revisions and Model 3/Y protocols are not covered by this assumption.
+Legacy S/X 2012–2020 candidate profiles use classic 11-bit CAN at 500 kbit/s, with 83/84/96 series positions selected independently from 60–100 kWh capacity metadata. Unknown-count inspection does not claim complete coverage. Temperatures remain an inherited experimental mapping. Exact part number/BMS revision requires hardware acceptance; 2021+ and Model 3/Y protocols are not implemented.
 
 The first version decodes broadcasts `0x6F2` and `0x102`. Other upstream health fields are candidates for validation, not implemented features.
 
@@ -55,7 +57,7 @@ The first version decodes broadcasts `0x6F2` and `0x102`. Other upstream health 
 4. Connect. Show adapter errors plainly; never substitute demo after a hardware failure.
 5. Distinguish connection state, received frames and decoded coverage. An opened adapter does not prove a responding BMS.
 6. Display units, source mode and freshness. Missing data must not become zero.
-7. Export a timestamped CSV snapshot. Disconnect clears data so readings cannot carry into another pack.
+7. Export timestamped per-group sample CSV, or a resistance pair with raw V/I, times and quality reasons. Disconnect clears session data so readings cannot carry into another pack.
 
 For a silent bench BMS, explain the absence of wake transmission. An opt-in wake mode may be considered after the pack and frame behavior are verified. Do not add it implicitly while polishing the interface.
 
@@ -76,8 +78,8 @@ Python 3.10+, `python-can`, `aiohttp` and plain HTML/CSS/JavaScript. Reuse upstr
 - Contactor control, HVIL bypass, vehicle emulation and arbitrary CAN transmission.
 - BMS security unlocking, fault clearing, flashing, coding or programming.
 - Automated repair recommendations or claims that normal readings establish safety.
-- Individual physical-cell measurement, unsupported packs and guaranteed state-of-health estimates.
-- Cloud hosting, remote hardware control, paid infrastructure, telemetry and shared captures.
+- Individual physical-cell measurement, unsupported protocols and guaranteed state-of-health estimates.
+- Remote hardware control, paid infrastructure, telemetry and shared physical captures. Public hosting covers the synthetic demo and browser-local CSV analysis.
 
 ## Acceptance
 
@@ -86,7 +88,9 @@ Python 3.10+, `python-can`, `aiohttp` and plain HTML/CSS/JavaScript. Reuse upstr
 - Startup and demo do not initialize CAN hardware. Live connection is explicit.
 - New app has no transmit/control routes; driver failures remain visible.
 - Tests cover mapping/scales, signed temperatures, invalid markers and independent expiration.
-- Incomplete coverage prevents a misleading full brick sum or pack comparison.
+- Incomplete/unknown coverage or out-of-profile channels prevent a misleading full brick sum or pack comparison.
+- Apparent-resistance export includes the original samples and rejection reasons; no direct BMS resistance is fabricated.
+- Software tests pass on Windows and Linux. This remains separate from physical adapter/pack acceptance.
 - Browser checks cover demo/disconnect, connection choices, desktop/mobile and CSV access.
 - Separate hardware acceptance establishes adapter detection, channel, bus settings, exact pack/profile, fresh coverage and comparison with an independent trusted reading source.
 - Friend's invitation and accepted permission are verified before reporting full access granted.

@@ -1,5 +1,18 @@
 # Foundation validation — 2026-10-28
 
+## Version 0.2: cross-platform and hosted demo
+
+- 21 Python tests and 17 Node analysis/CSV tests passed locally.
+- [GitHub Actions run](https://github.com/DaniilKi/tesla-bms-studio/actions/runs/40757343783): both `software (windows-latest)` and `software (ubuntu-latest)` completed successfully against application commit `02a35387b5147e52ead29b41dacb1bb815ea2797`. Each ran the 21 + 17 tests, compilation and static demo build.
+- Profile coverage checks include 83, 84, 96 and unknown counts; 60/70/75/85/90/100 metadata is tested independently. An out-of-profile channel suppresses the full-pack sum comparison.
+- Hosted-build browser demo: 96/96 group resistance estimates after the synthetic 0→50 A step; first group approximately 0.250 mΩ, correctly tagged synthetic. CSV was downloaded and its headers/source/raw pair verified.
+- Local Python demo at 100 kWh metadata + independent 84-group profile showed 84/84; its A/B pair produced 84 resistance estimates.
+- The two local sample exports were imported into the browser-only demo and again produced 84/84 estimates, with no upload API. Thus the local and hosted analysis paths share the same calculator.
+- Desktop 1440×1100 and phone 390×844 had no horizontal overflow; screenshots were inspected. Normal demo operation had no console errors.
+- New public Site deployment succeeded; unauthenticated dashboard/runtime returned HTTPS 200 with no sign-in redirect. See [deployment receipt](DEPLOYMENT.md).
+
+Physical hardware, calibration, BMS/pack revision compatibility and actual CAN timing remain unverified. Software tests on Windows/Linux are not hardware acceptance for every 60–100 kWh battery. Direct group resistance from BMS is not implemented; the exported result is a screened apparent ΔV/ΔI estimate.
+
 ## Software evidence
 
 Environment used for this run: Windows, Python 3.10, python-can 4.6.1, aiohttp 3.14.5.
