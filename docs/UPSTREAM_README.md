@@ -11,9 +11,9 @@ view it from any browser on the network.
 Built for diagnosing a suspect module out of car. Known failure modes are
 listed at the bottom. CAN decode, BMS behaviours, and the out-of-car
 bring-up notes (HVIL, playing the car, contactor operation) are in
-[NOTES.md](NOTES.md).
+[NOTES.md](../NOTES.md).
 
-![dashboard](img/dashboard.png)
+![dashboard](../img/dashboard.png)
 
 ## What you get
 
@@ -34,8 +34,8 @@ bring-up notes (HVIL, playing the car, contactor operation) are in
 
 ## Pack pinout, X036
 
-Viewed at the connector on the pack. 
-![x036](img/x036_pinout.png)
+Viewed at the connector on the pack.
+![x036](../img/x036_pinout.png)
 
 
 | Pin | Signal            | Notes                       |
@@ -52,7 +52,7 @@ Viewed at the connector on the pack.
 | 12  | GND-BMS           |                             |
 
 
-The way I ![connected it](img/x036_wiring.jpg) as an example.
+The way I ![connected it](../img/x036_wiring.jpg) as an example.
 
 To read cell voltages you need at minimum: 12 V on pin 2, GND on pin 8 or
 12, CAN pair on 9 (L) and 10 (H) at 500 kbit/s. The BMS wakes on any bus
@@ -116,7 +116,7 @@ oxidation around C26 and C27 on the small BMB PCB stuck to the module
 top. Symptom: bricks above the mid-tap collapse to near zero or a
 nonsense sub-1 V, bricks below read about 100 mV low but stay plausible.
 
-![See](img/c26_c27_corrosion.jpg) 
+![See](../img/c26_c27_corrosion.jpg)
 
 Clean with IPA and a stiff brush, check the caps' solder joints, replace if the joints look eaten.
 
@@ -127,7 +127,7 @@ wires clip into the BMB. Vibration and corrosion loosen them. Symptom:
 one brick reads as an outlier (tens of mV off pack median) while the
 other five on that module are fine
 
-![See](img/loose_sense_wire.jpg)
+![See](../img/loose_sense_wire.jpg)
 
 Extend the sense wire and pop rivet it to the aluminium plate using a crimped eyelet.
 
@@ -137,7 +137,7 @@ BMB downstream goes dark too. If your dashboard shows temps but no brick
 voltages, and pack V reports SNA (0x102 with bytes 2-5 all 0xFF), suspect
 a broken link.
 
-**Water at the pack floor.** ![See](img/pack_water_ingress.jpg)
+**Water at the pack floor.** ![See](../img/pack_water_ingress.jpg)
 
 Regardless of what the BMS says, inspect the physical pack floor for
 water damage. Dry, dry again, then diagnose.

@@ -4,6 +4,8 @@ A local interface for reading legacy Tesla Model S battery brick voltages throug
 
 **Status: working software foundation; physical PCAN/battery compatibility has not been verified.**
 
+![Tesla BMS Studio with synthetic demo readings](img/studio-demo.png)
+
 ## Start the new app
 
 Requires Python 3.10 or newer. No administrator account or battery is needed for the demo.
