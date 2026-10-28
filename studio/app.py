@@ -119,6 +119,11 @@ class Connection:
                     data=bytes([mux]) + bits.to_bytes(7, "little"), is_extended_id=False))
             self.decoder.feed(can.Message(arbitration_id=0x102,
                 data=round(total * 100).to_bytes(2, "little") + current_bytes + bytes(4), is_extended_id=False))
+            # Synthetic learned-capacity fixture; not a new-pack SOH baseline.
+            demo_ah = {60: 154.2, 70: 183.1, 75: 195.4, 85: 222.8, 90: 238.1, 100: 270.2}.get(self.capacity_kwh, 200.0)
+            raw_cac = round(demo_ah * 10)
+            self.decoder.feed(can.Message(arbitration_id=0x7E2,
+                data=[0, 0, (raw_cac & 0xF) << 4, raw_cac >> 4, 0, 0, 0, 0], is_extended_id=False))
             tick += 1
             await asyncio.sleep(1)
 

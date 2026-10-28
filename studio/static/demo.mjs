@@ -1,3 +1,4 @@
+import { demoCapacityAh, DemoChargeCounter } from "./diagnostics.mjs";
 export class DemoTransport {
   constructor(profiles) {
     this.profiles = profiles;
@@ -8,6 +9,7 @@ export class DemoTransport {
     this.current = 0;
     this.scenario = "balanced";
     this.frames = 0;
+    this.charge = new DemoChargeCounter();
   }
   async request(path, body) {
     if (path === "/api/connect") {
@@ -21,8 +23,11 @@ export class DemoTransport {
       this.session = crypto.randomUUID();
       this.current = 0;
       this.frames = 0;
-    } else if (path === "/api/disconnect") this.status = "disconnected";
-    else if (path === "/api/demo") {
+      this.charge = new DemoChargeCounter();
+    } else if (path === "/api/disconnect") {
+      this.status = "disconnected";
+      this.charge = new DemoChargeCounter();
+    } else if (path === "/api/demo") {
       if (this.status !== "demo") throw Error("Сначала запустите демо");
       this.current = body.current_a ?? this.current;
       this.scenario = body.scenario ?? this.scenario;
@@ -47,7 +52,13 @@ export class DemoTransport {
     const known = bricks.filter((v) => v !== null),
       total = known.reduce((a, b) => a + b, 0);
     if (active) this.frames += 34;
+    if (active) this.charge.feed(t, this.current);
     return {
+      cac_min_ah: active ? (demoCapacityAh[this.capacity] ?? 200) : null,
+      cac_raw: null,
+      cac_quality: active ? "demo" : "missing",
+      session_charge: this.charge.snapshot(),
+      vsh: null,
       profile: this.profile,
       mode: "demo",
       status: this.status,

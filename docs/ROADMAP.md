@@ -1,5 +1,17 @@
 # Development plan
 
+## Version 0.3 — daily interface, Ah and VSH
+
+- [x] Compact summary, separate task tabs and hover/keyboard/tap help.
+- [x] Verified public legacy CAC-min field, freshness and raw-code export.
+- [x] Recorded signed-current Ah with gap detection; no automatic SOH/full-capacity claim.
+- [x] Seven-channel VSH map per BMB; explicit demo/local CSV provenance and units.
+- [x] Keep VSH separate from voltage, group ΔV/ΔI and HV isolation.
+- [ ] Verify exact-pack live CAC behavior against a trusted diagnostic source.
+- [ ] Obtain and validate a live VSH decoder before adding hardware VSH readings.
+- [ ] Add individual-group CAC only after its mapping is verified; minimum alone is implemented.
+
+
 ## Version 0.2 — expanded scope
 
 - [x] Independent 60/70/75/85/90/100 kWh metadata and 83/84/96/unknown series profiles.

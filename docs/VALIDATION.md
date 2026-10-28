@@ -1,5 +1,13 @@
 # Foundation validation — 2026-10-28
 
+## Version 0.3: daily interface, capacity and VSH
+
+- 29 Python + 23 Node tests passed locally: legacy CAC mapping/freshness/raw-code handling, current integration/sign crossings/gaps, VSH units/missing/duplicate channels, 112-channel demo provenance, and existing receive-only/API/resistance checks.
+- Browser QA passed on the static hosted build at 1440×1100 and 390×844, with no horizontal overflow or page errors. All four tabs, hover hints, Escape, mobile hint bounds, CSV VSH roundtrip, capacity CSV download and 96/96 apparent-resistance regression were exercised.
+- Local Python UI: 100 kWh metadata with independent 84-group profile returned CAC demo 270.2 Ah; current-step recording advanced the session counter; demo VSH rendered 14×7 channels. Disconnect cleared CAC/session/VSH. Hardware selection without confirmation stayed disconnected with no VSH values. Keyboard hints and repeat-click dismissal passed.
+- Numeric examples above are synthetic fixtures, not measured pack results. Live VSH decoding and physical CAC agreement remain unverified.
+- Platform CI and publication receipts are recorded after their live read-back in this file and DEPLOYMENT.md.
+
 ## Version 0.2: cross-platform and hosted demo
 
 - 21 Python tests and 17 Node analysis/CSV tests passed locally.
@@ -33,4 +41,4 @@ Environment used for this run: Windows, Python 3.10, python-can 4.6.1, aiohttp 3
 
 No physical PCAN adapter, PEAK runtime, Linux SocketCAN controller or Tesla pack was tested in this acceptance run. PCAN initialization was checked with a fake receive-only adapter; transport reception also used python-can's virtual bus. These tests do not establish wiring, adapter firmware behavior, hardware listen-only, BMS wake behavior, protocol compatibility or measurement accuracy on a real battery.
 
-No driver installation, hardware configuration, CAN wake transmission, contactor operation or fault clearing was performed. No website/cloud deployment was made. The GitHub repository is public source code; the app runs locally.
+No driver installation, hardware configuration, CAN wake transmission, contactor operation or fault clearing was performed. This original foundation checkpoint preceded website publication; subsequent hosted releases are recorded above and in DEPLOYMENT.md.

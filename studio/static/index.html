@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Tesla BMS Studio — 60–100 кВт·ч</title>
+    <title>Tesla BMS Studio — диагностика батареи</title>
     <meta
       name="description"
-      content="Дашборд Tesla Model S: напряжения групп, температура и оценка ΔV/ΔI. Онлайн-демо и локальный клиент Windows/Linux."
+      content="Напряжения, ёмкость BMS в А·ч, измерительная проводка VSH и оценка сопротивления групп. Windows/Linux и онлайн-демо."
     />
     <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/static/style.css" />
@@ -16,24 +16,38 @@
   <body>
     <header>
       <a class="brand" href="/">B<span>∿</span>S <strong>STUDIO</strong></a
-      ><span class="header-note">MODEL S / 60–100 кВт·ч</span
-      ><span class="version">MULTIPACK · 0.2</span>
+      ><span class="header-note">MODEL S · BATTERY WORKSPACE</span
+      ><span id="status" class="badge" role="status">Отключено</span>
     </header>
     <main>
       <aside>
-        <div class="eyebrow">01 / ПОДКЛЮЧЕНИЕ</div>
-        <h1>Видеть блок. <br />Понимать данные.</h1>
-        <p class="intro">
-          Напряжение, температура и расчётное сопротивление групп. PCAN-USB ·
-          Windows / Linux.
-        </p>
-        <div id="hosting-note" class="hosting-note" hidden>
-          Онлайн-демо. USB-CAN доступен в локальном клиенте. CSV обрабатывается
-          только в вашем браузере.
+        <div class="aside-heading">
+          <h1>Подключение</h1>
+          <span class="help"
+            ><button
+              class="help-trigger"
+              type="button"
+              aria-label="Помощь: подключение"
+              aria-expanded="false"
+            >
+              ?</button
+            ><span class="hint" role="tooltip"
+              >Локальный клиент Windows/Linux принимает CAN через PCAN-USB.
+              Онлайн-демо работает без оборудования. Приложение не отправляет
+              CAN-команды, не пробуждает BMS и не управляет контакторами.
+              Аппаратный listen-only SocketCAN настраивается отдельно.</span
+            ></span
+          >
         </div>
         <form id="connection">
-          <label for="capacity">Номинальная ёмкость, кВт·ч</label>
-          <select id="capacity">
+          <label for="mode">Источник</label
+          ><select id="mode">
+            <option value="demo">Демо</option>
+            <option value="pcan">Windows · PCAN-Basic</option>
+            <option value="socketcan">Linux · SocketCAN</option>
+          </select>
+          <label for="capacity">Батарея, кВт·ч</label
+          ><select id="capacity">
             <option>60</option>
             <option>70</option>
             <option>75</option>
@@ -41,18 +55,26 @@
             <option>90</option>
             <option>100</option>
           </select>
-          <label for="profile">Профиль блока</label
-          ><select id="profile"></select>
-          <p class="small">
-            Ёмкость не определяет число групп. Legacy S/X 2012–2020; каждая
-            ревизия требует проверки. Температурная карта — экспериментальная.
-          </p>
-          <label for="mode">Источник</label>
-          <select id="mode">
-            <option value="demo">Синтетическое демо</option>
-            <option value="pcan">Windows · PCAN-Basic</option>
-            <option value="socketcan">Linux · SocketCAN</option>
-          </select>
+          <div class="label-row">
+            <label for="profile">Профиль</label
+            ><span class="help"
+              ><button
+                class="help-trigger"
+                type="button"
+                aria-label="Помощь: профиль"
+                aria-expanded="false"
+              >
+                ?</button
+              ><span class="hint" role="tooltip"
+                >Ёмкость не определяет число групп. Выберите профиль по точной
+                ревизии блока. Legacy S/X 2012–2020; совместимость каждой
+                ревизии требует проверки. Неизвестный профиль предназначен для
+                просмотра, без полного сравнения блока. Температурная карта
+                предварительная.</span
+              ></span
+            >
+          </div>
+          <select id="profile"></select>
           <div id="hardware" hidden>
             <label for="channel">Канал CAN</label
             ><input
@@ -61,213 +83,342 @@
               maxlength="32"
               spellcheck="false"
             />
-            <div class="settings">
-              <strong>500 kbit/s · классический CAN</strong>
-            </div>
-            <p id="driver-note" class="small"></p>
+            <details class="compact-details">
+              <summary>Драйвер и настройки</summary>
+              <p id="driver-note"></p>
+              <p>
+                500 kbit/s · classic CAN. Подключение HV-блока проверяет
+                квалифицированный специалист.
+              </p>
+            </details>
             <label class="check"
               ><input id="confirmed" type="checkbox" /><span
-                >Проверены ревизия блока, профиль, низковольтное подключение и
-                настройки CAN.</span
+                >Профиль и подключение проверены</span
               ></label
             >
           </div>
-          <button id="connect" type="submit">Запустить демо ↗</button
+          <button id="connect" type="submit">Запустить демо</button
           ><button id="disconnect" class="secondary" type="button" disabled>
             Отключить
           </button>
         </form>
+        <div id="hosting-note" class="source-note" hidden>
+          USB-CAN — в локальном клиенте.
+        </div>
         <div id="error" role="alert" hidden></div>
-        <div id="demo-controls" hidden>
-          <label for="scenario">Сценарий демо</label
+        <details id="demo-controls" class="compact-details" hidden>
+          <summary>Управление демо</summary>
+          <label for="scenario">Сценарий</label
           ><select id="scenario">
             <option value="balanced">Равномерные напряжения</option>
-            <option value="imbalance">Отклонение группы B42</option>
-          </select>
-          <button id="demo-step" class="secondary" type="button">
-            Демо: переключить ток 0 → 50 А
+            <option value="imbalance">Отклонение B42</option></select
+          ><button id="demo-step" class="secondary" type="button">
+            Демо-ток 0 ↔ 50 А
           </button>
-          <p class="small">
-            Изменяются только синтетические числа. Управления нагрузкой или
-            контакторами нет.
-          </p>
-        </div>
-        <div class="scope">
-          <span class="dot"></span
-          ><strong>Приложение только принимает CAN</strong>
-          <p>
-            Без пробуждения BMS, стирания ошибок и управления контакторами.
-            Спящий блок может не передавать данные.
-          </p>
-        </div>
-        <a
-          class="download"
-          href="https://github.com/DaniilKi/tesla-bms-studio/archive/refs/heads/main.zip"
-          >↓ Локальный клиент Windows / Linux</a
-        >
-        <p class="small">
-          Распакуйте ZIP. Windows: start-windows.cmd. Linux: bash
-          start-linux.sh. Нужен Python 3.10+; драйвер PEAK устанавливается
-          отдельно.
-        </p>
-        <details>
-          <summary>Границы диагностики</summary>
-          <p>
-            Показания относятся к параллельным группам, а не к каждой физической
-            ячейке. Интерфейс не подтверждает безопасность HV-блока. Подключение
-            проверяет квалифицированный специалист.
-          </p>
         </details>
-        <div class="credit">
-          Основано на
+        <div class="sidebar-footer">
           <a
-            href="https://github.com/jetpax/PiCanScanMyTesla"
-            target="_blank"
-            rel="noreferrer"
-            >PiCanScanMyTesla ↗</a
-          ><br /><a href="https://github.com/DaniilKi/tesla-bms-studio"
-            >Исходный код и инструкции ↗</a
+            class="download"
+            href="https://github.com/DaniilKi/tesla-bms-studio/archive/refs/heads/main.zip"
+            >↓ Клиент Windows / Linux</a
           >
-          · MIT
+          <details class="compact-details">
+            <summary>Запуск и безопасность</summary>
+            <p>
+              Нужен Python 3.10+. Windows: start-windows.cmd. Linux: bash
+              start-linux.sh. Драйвер PEAK устанавливается отдельно.
+            </p>
+            <p>
+              Показания относятся к параллельным группам, не к каждой физической
+              ячейке. Нормальные показания не подтверждают безопасность
+              HV-блока.
+            </p>
+          </details>
+          <a
+            class="source-link"
+            href="https://github.com/DaniilKi/tesla-bms-studio"
+            >Код и документация ↗</a
+          >
         </div>
       </aside>
-      <section class="workspace" aria-label="Показания батареи">
+      <section class="workspace" aria-label="Диагностика батареи">
         <div class="workspace-heading">
           <div>
-            <div class="eyebrow">02 / ОБЗОР БАТАРЕИ</div>
-            <h2>Рабочее пространство</h2>
+            <div class="eyebrow">ДИАГНОСТИКА</div>
+            <h2 id="session-label">Батарея Model S</h2>
           </div>
-          <span id="status" class="badge" role="status">Отключено</span>
+          <span id="demo-banner" class="demo-badge" hidden
+            >ДЕМО · синтетические данные</span
+          >
         </div>
-        <div id="demo-banner" class="demo-banner" hidden>
-          СИНТЕТИЧЕСКОЕ ДЕМО
-          <span>Батарея не подключена. Все числа сгенерированы.</span>
-        </div>
-        <div id="profile-warning" class="hosting-note" hidden></div>
+        <div id="profile-warning" class="notice" hidden></div>
         <div class="metrics">
           <article>
-            <span>НАПРЯЖЕНИЕ БЛОКА</span><strong id="pack">—</strong
-            ><small>В · <span id="current">—</span> А</small>
+            <span class="metric-label">НАПРЯЖЕНИЕ · В</span
+            ><strong id="pack">—</strong
+            ><small>Ток <span id="current">—</span> А</small>
           </article>
           <article>
-            <span>РАЗБРОС ГРУПП</span><strong id="spread">—</strong
-            ><small>мВ · по свежим данным</small>
+            <span class="metric-label">РАЗБРОС · мВ</span
+            ><strong id="spread">—</strong><small id="range">— / — В</small>
           </article>
           <article>
-            <span>СВЕЖИЕ ГРУППЫ</span><strong id="coverage">0 / —</strong
+            <span class="metric-label">ГРУППЫ</span
+            ><strong id="coverage">0 / —</strong
             ><small id="temp-coverage">Температуры: —</small>
           </article>
+          <article>
+            <div class="label-row">
+              <span class="metric-label">ЁМКОСТЬ BMS · А·ч</span
+              ><span class="help"
+                ><button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="Что означает ёмкость CAC min"
+                  aria-expanded="false"
+                >
+                  ?</button
+                ><span class="hint" role="tooltip"
+                  >Оценка BMS для группы с наименьшей Calculated Amp-hour
+                  Capacity. Это не ёмкость каждой физической ячейки, не
+                  сопротивление и не номинальная энергия в кВт·ч. Декодируется
+                  legacy 0x7E2/mux0. Без свежего подтверждённого значения —
+                  прочерк; SOH по фиксированной базе не рассчитывается.</span
+                ></span
+              >
+            </div>
+            <strong id="cac-min">—</strong
+            ><small id="cac-status">Нет сигнала BMS</small>
+          </article>
         </div>
-        <div class="section-heading">
-          <h3 id="map-title">Карта напряжений</h3>
-          <div class="tabs">
-            <button id="view-voltage" class="tab selected" type="button">
-              Вольтаж</button
-            ><button id="view-resistance" class="tab" type="button">
-              Оценка R
+        <nav class="tabs" aria-label="Разделы диагностики">
+          <button id="view-voltage" class="tab selected" type="button">
+            Напряжение</button
+          ><button id="view-vsh" class="tab" type="button">Проводка VSH</button
+          ><button id="view-capacity" class="tab" type="button">
+            Ёмкость · А·ч</button
+          ><button id="view-resistance" class="tab" type="button">
+            Оценка ΔV/ΔI
+          </button>
+        </nav>
+        <div id="voltage-panel">
+          <div class="section-heading">
+            <h3 id="map-title">Группы · В</h3>
+            <span id="map-caption" class="small"></span>
+          </div>
+          <div id="modules" class="modules"></div>
+          <div id="selected-brick" class="selected-brick"></div>
+          <details class="compact-details plot-details">
+            <summary>График по группам</summary>
+            <svg
+              id="voltage-chart"
+              class="voltage-chart"
+              viewBox="0 0 900 90"
+              role="img"
+              aria-label="Значения по группам"
+            ></svg>
+          </details>
+        </div>
+        <section id="vsh-panel" hidden>
+          <div class="section-heading">
+            <div class="heading-help">
+              <h3>Измерительная проводка · мОм</h3>
+              <span class="help"
+                ><button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="Что означает сопротивление VSH"
+                  aria-expanded="false"
+                >
+                  ?</button
+                ><span class="hint" role="tooltip"
+                  >VSH — сопротивление voltage-sense harness. Каналы R0–R6
+                  принадлежат измерительной цепи BMB и не являются семью
+                  физическими ячейками. Сопротивление VSH не переводится в А·ч и
+                  не подменяет ΔV/ΔI. Подсвечен максимум набора, а не
+                  подтверждённая неисправность. Live-декодер этих полей пока не
+                  подтверждён; доступны демо и импорт расшифрованного CSV.</span
+                ></span
+              >
+            </div>
+            <span id="vsh-source" class="data-tag"></span>
+          </div>
+          <div class="toolbar">
+            <label class="file-button"
+              >Открыть CSV<input
+                id="import-vsh"
+                type="file"
+                accept=".csv,text/csv" /></label
+            ><button id="export-vsh" class="secondary slim" type="button">
+              ↓ CSV VSH</button
+            ><button id="clear-vsh" class="text-button" type="button" hidden>
+              Вернуться к источнику</button
+            ><span class="help"
+              ><button
+                class="help-trigger"
+                type="button"
+                aria-label="Формат CSV VSH"
+                aria-expanded="false"
+              >
+                ?</button
+              ><span class="hint" role="tooltip"
+                >Колонки: signal,value,unit. Например BMS_TVSH_BMB01_R0. Единицы
+                mOhm или Ohm; время measured_at_utc необязательно. Пропуски:
+                пусто, — или NA. Импорт остаётся в браузере, время импорта не
+                считается временем измерения.</span
+              ></span
+            >
+          </div>
+          <div id="vsh-empty" class="empty-state" hidden>
+            Нет данных VSH. Откройте CSV с расшифрованными значениями.
+          </div>
+          <div id="vsh-modules" class="vsh-modules"></div>
+          <p id="vsh-selected" class="selected-brick"></p>
+        </section>
+        <section id="capacity-panel" hidden>
+          <div class="section-heading">
+            <div class="heading-help">
+              <h3>Ёмкость и запись тока</h3>
+              <span class="help"
+                ><button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="Чем отличаются ёмкость и А·ч сессии"
+                  aria-expanded="false"
+                >
+                  ?</button
+                ><span class="hint" role="tooltip"
+                  >CAC min — оценка BMS группы с наименьшей ёмкостью. Счётчики
+                  сессии интегрируют записанный ток: Q = ∫I dt / 3600. Короткая
+                  запись, пауза или изменение SOC не являются полным тестом
+                  ёмкости. Полная ёмкость требует документированных
+                  начальных/конечных условий. Из сопротивления VSH или одного
+                  напряжения её получить нельзя.</span
+                ></span
+              >
+            </div>
+            <button id="export-capacity" class="secondary slim" type="button">
+              ↓ CSV А·ч
             </button>
           </div>
-        </div>
-        <p id="map-caption" class="small layout-note">
-          Логический порядок групп. Не схема физического расположения.
-        </p>
-        <svg
-          id="voltage-chart"
-          class="voltage-chart"
-          viewBox="0 0 900 90"
-          role="img"
-          aria-label="Напряжение по группам"
-        ></svg>
-        <div id="modules" class="modules"></div>
-        <div id="selected-brick" class="selected-brick">
-          Выберите группу для подробностей.
-        </div>
-        <div class="analysis-panel">
-          <div class="eyebrow">03 / СОПРОТИВЛЕНИЕ ГРУПП</div>
-          <h3>Оценка по двум измерениям ΔV/ΔI</h3>
-          <p class="small">
-            Прямой сигнал внутреннего R из BMS не подтверждён. Расчёт ниже —
-            кажущееся DC-сопротивление всей группы, не отдельной ячейки и не
-            стандартный тест DCIR. Нагрузку приложение не создаёт.
+          <div class="capacity-summary">
+            <article>
+              <span class="metric-label">ЁМКОСТЬ BMS · CAC MIN</span
+              ><strong><span id="capacity-ah">—</span> <i>А·ч</i></strong
+              ><small id="capacity-source">Нет свежего сигнала</small>
+            </article>
+            <article>
+              <span class="metric-label">КАЧЕСТВО ЗАПИСИ СЕССИИ</span
+              ><strong id="charge-quality">Ожидание</strong
+              ><small id="charge-duration">Записано 0 с</small>
+            </article>
+          </div>
+          <div class="label-row polarity-row">
+            <label for="capacity-polarity">Знак тока</label
+            ><select id="capacity-polarity">
+              <option value="unknown">Не проверен</option>
+              <option value="positive">Плюс = разряд</option>
+              <option value="negative">Минус = разряд</option>
+            </select>
+          </div>
+          <div class="throughput">
+            <article>
+              <span id="positive-label" class="metric-label"
+                >ПОЛОЖИТЕЛЬНЫЙ ТОК</span
+              ><strong><span id="positive-ah">—</span> <i>А·ч</i></strong>
+            </article>
+            <article>
+              <span id="negative-label" class="metric-label"
+                >ОТРИЦАТЕЛЬНЫЙ ТОК</span
+              ><strong><span id="negative-ah">—</span> <i>А·ч</i></strong>
+            </article>
+          </div>
+          <p class="source-note">
+            За текущую сессию · не полная ёмкость батареи
           </p>
+        </section>
+        <section id="analysis-panel" class="analysis-panel" hidden>
+          <div class="section-heading">
+            <div class="heading-help">
+              <h3>Оценка сопротивления группы</h3>
+              <span class="help"
+                ><button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="Условия оценки ΔV/ΔI"
+                  aria-expanded="false"
+                >
+                  ?</button
+                ><span class="hint" role="tooltip"
+                  >Экспериментальная оценка −ΔV/ΔI, не прямое чтение R из BMS и
+                  не VSH. На группу: ≥2 отсчёта тока в ±250 мс, разброс ≤2 А,
+                  возраст ≤5 с, |ΔI|≥5 А, интервал 0.1–30 с. Если известны: ΔT≤2
+                  °C, ΔSOC≤1 п.п. Условия и знак тока нужно проверить.
+                  Приложение не создаёт нагрузку и не выполняет стандартный
+                  DCIR-тест.</span
+                ></span
+              >
+            </div>
+            <span id="r-coverage" class="data-tag">0 групп</span>
+          </div>
           <div class="analysis-grid">
             <div>
-              <label for="current-sign">Проверенное направление тока</label
+              <label for="current-sign">Знак тока</label
               ><select id="current-sign">
-                <option value="unknown">Направление ещё не проверено</option>
-                <option value="positive">Положительный ток = разряд</option>
-                <option value="negative">
-                  Отрицательный ток = разряд
-                </option></select
+                <option value="unknown">Не проверен</option>
+                <option value="positive">Плюс = разряд</option>
+                <option value="negative">Минус = разряд</option></select
               ><label class="check"
                 ><input id="conditions" type="checkbox" /><span
-                  >Условия пары сопоставимы; известен знак тока. Это оценка, не
-                  измерение BMS. Температура/SOC могут быть неизвестны.</span
+                  >Условия пары и знак тока проверены</span
                 ></label
               >
             </div>
             <div class="measurement-actions">
               <button id="capture-before" class="secondary" type="button">
-                1. Сохранить измерение A</button
-              ><button id="capture-after" class="secondary" type="button">
-                2. Сохранить B и рассчитать</button
-              ><button id="clear-analysis" class="secondary" type="button">
+                1. Сохранить A</button
+              ><button id="capture-after" type="button">
+                2. Сохранить B → расчёт</button
+              ><button id="clear-analysis" class="text-button" type="button">
                 Сбросить пару
               </button>
             </div>
           </div>
-          <div class="import-row">
-            <label class="file-label"
-              >Открыть A из CSV<input
-                id="import-before"
-                type="file"
-                accept=".csv,text/csv" /></label
-            ><label class="file-label"
-              >Открыть B из CSV<input
-                id="import-after"
-                type="file"
-                accept=".csv,text/csv"
-            /></label>
-          </div>
-          <p id="analysis-status" role="status">
-            Нет пары измерений. При постоянном токе сопротивление не
-            рассчитывается.
-          </p>
-          <p class="small">
-            На каждую группу: ≥2 отсчёта тока в пределах ±250 мс; разброс тока
-            ≤2 А; возраст ≤5 с; |ΔI| ≥5 А; интервал 0.1–30 с. Проверки качества
-            не заменяют метрологическую калибровку.
-          </p>
-          <div class="analysis-summary">
-            <div><span>R ИЗ BMS</span><strong>не декодировано</strong></div>
+          <p id="analysis-status" role="status">Нужны два измерения.</p>
+          <details class="compact-details">
+            <summary>Импорт пары из CSV</summary>
+            <div class="toolbar">
+              <label class="file-button"
+                >Открыть A<input
+                  id="import-before"
+                  type="file"
+                  accept=".csv,text/csv" /></label
+              ><label class="file-button"
+                >Открыть B<input
+                  id="import-after"
+                  type="file"
+                  accept=".csv,text/csv"
+              /></label>
+            </div>
+          </details>
+        </section>
+        <details class="compact-details can-details">
+          <summary>Параметры CAN</summary>
+          <div class="readout">
             <div>
-              <span>РАСЧЁТНЫЕ R</span><strong id="r-coverage">0 групп</strong>
+              <span>КАДРЫ</span><strong id="frames">0</strong
+              ><small id="age">Кадры не получены</small>
             </div>
             <div>
-              <span>ИЗОЛЯЦИЯ HV</span><strong id="isolation">— кОм</strong
-              ><small>Отдельный показатель; не R ячейки</small>
+              <span>БЛОК − СУММА ГРУПП</span><strong id="difference">—</strong>
+            </div>
+            <div>
+              <span>ИЗОЛЯЦИЯ HV</span><strong id="isolation">— кОм</strong>
             </div>
           </div>
-        </div>
-        <div class="readout">
-          <div>
-            <span>МИНИМУМ / МАКСИМУМ</span><strong id="range">— / — В</strong>
-          </div>
-          <div>
-            <span>БЛОК − СУММА ГРУПП</span><strong id="difference">—</strong
-            ><small>Только полный подтверждённый профиль</small>
-          </div>
-          <div>
-            <span>ПРИНЯТО КАДРОВ</span><strong id="frames">0</strong
-            ><small id="age">Кадры не получены</small>
-          </div>
-        </div>
+        </details>
         <footer>
-          <p>
-            Пропущенные и устаревшие значения остаются пустыми. Напряжения
-            истекают через 45 с. Нормальные числа не доказывают исправность
-            блока.
-          </p>
+          <span class="source-note">BMS Studio · 0.3</span>
           <div class="exports">
             <button id="export-sample" class="export" type="button">
               ↓ CSV измерений</button
@@ -276,6 +427,7 @@
               class="export"
               type="button"
               disabled
+              hidden
             >
               ↓ CSV оценки R
             </button>

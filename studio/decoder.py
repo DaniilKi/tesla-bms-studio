@@ -8,6 +8,7 @@ import time
 import json
 from collections import deque
 from pathlib import Path
+from .charge import ChargeCounter
 
 PROFILES = {p["id"]: p for p in json.loads(Path(__file__).with_name("profiles.json").read_text(encoding="utf-8"))}
 
@@ -30,6 +31,9 @@ class Decoder:
         self.currents = deque(maxlen=2000)
         self.isolation_kohm = None
         self.isolation_seen = None
+        self.cac_raw = None
+        self.cac_seen = None
+        self.charge = ChargeCounter()
 
     def feed(self, message):
         if (message.is_extended_id or message.is_error_frame
@@ -65,11 +69,17 @@ class Decoder:
             self.pack_a = (None if data[2:4] == b"\xff\xff" else
                            round(int.from_bytes(data[2:4], "little", signed=True) * 0.1, 1))
             self.pack_seen = now
+            self.charge.feed(now, self.pack_a)
             if self.pack_a is not None:
                 self.currents.append((now, self.pack_a))
         elif message.arbitration_id == 0x212 and len(data) >= 4:
             self.isolation_kohm = None if data[3] == 0xFF else data[3] * 20
             self.isolation_seen = now
+        elif message.arbitration_id == 0x7E2 and len(data) >= 4 and data[0] == 0:
+            # Public legacy definition: unsigned LE bits 20..31, 0.1 Ah/bit.
+            # No protocol-defined SNA marker is verified for this field.
+            self.cac_raw = ((data[2] >> 4) & 0x0F) | (data[3] << 4)
+            self.cac_seen = now
 
     def snapshot(self):
         now = self.clock()
@@ -102,7 +112,15 @@ class Decoder:
             })
         complete = self.profile["expected_count"] is not None and len(known) == count
         extra = [i + 1 for i in range(count, 96) if fresh(self.bricks[i], self.brick_seen[i]) is not None]
+        cac_raw = fresh(self.cac_raw, self.cac_seen)
+        cac_quality = ("missing" if self.cac_seen is None else "stale" if cac_raw is None
+                       else "unverified_max_code" if cac_raw == 0xFFF else "as_reported")
         return {
+            "cac_min_ah": round(cac_raw * 0.1, 1) if cac_quality == "as_reported" else None,
+            "cac_raw": cac_raw,
+            "cac_quality": cac_quality,
+            "session_charge": self.charge.snapshot(now),
+            "vsh": None,
             "profile": self.profile,
             "samples": samples,
             "outside_profile_bricks": extra,

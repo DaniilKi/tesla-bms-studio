@@ -159,7 +159,7 @@ export function sampleRows(state) {
   ];
 }
 
-export function parseCsv(text) {
+export function parseCsv(text, maxRows = 97) {
   if (text.length > 2000000) throw Error("CSV превышает 2 МБ");
   text = text.replace(/^\ufeff/, "");
   const rows = [];
@@ -187,8 +187,8 @@ export function parseCsv(text) {
   if (quote) throw Error("Незакрытая кавычка CSV");
   row.push(cell);
   if (row.some((v) => v !== "")) rows.push(row);
-  if (rows.length < 2 || rows.length > 97)
-    throw Error("CSV должен содержать от 1 до 96 групп");
+  if (rows.length < 2 || rows.length > maxRows)
+    throw Error("Число строк CSV вне поддерживаемого диапазона");
   return rows;
 }
 

@@ -2,6 +2,8 @@
 
 Defined: 2026-10-28. Working name; branding can change without changing the scope.
 
+**Scope update, v0.3:** daily-use layout with four summary readings and task tabs; explanatory text moves into accessible hints. Add BMS minimum-group CAC in Ah, separate recorded session current integrals, and a VSH harness-resistance map with local CSV import/export. The screenshot shows mOhm VSH fields, not an Ah calculation. [Measurement definitions and critique](CAPACITY_AND_VSH.md) govern these features. Live VSH and individual group CAC decoders remain unverified; no unsupported values are fabricated.
+
 **Scope update, v0.2:** user expanded the goal to Model S batteries 60–100 kWh, resistance export, Windows/Linux and an online dashboard demo. [Current detailed definition](MULTIPACK_AND_RESISTANCE.md) takes precedence over the original 85/90-only assumptions below. Profiles now independently select 83/84/96 groups or an unknown-count inspection window. Direct per-group resistance from BMS is unverified; the app implements a labeled experimental apparent ΔV/ΔI estimate with raw-pair CSV export. Online demo and physical CAN connectivity are separate.
 
 ## Purpose
@@ -42,6 +44,9 @@ Specific battery capacity, part number, BMS firmware, actual host OS and success
 | Spread | Maximum minus minimum among fresh brick readings, in mV. Coverage must accompany it. |
 | Pack minus brick sum | Numerical comparison requiring 96 fresh bricks and fresh pack voltage. Not an automatic fault diagnosis. |
 | Demo | Generated readings with no physical CAN connection. Always visibly labeled. |
+| CAC min | BMS-reported minimum group Calculated Amp-hour Capacity in Ah. A learned estimate, not a full discharge test. |
+| Session Ah | Integrated recorded current, separated by raw sign; missing intervals excluded. Not total pack capacity. |
+| VSH / TVSH | Voltage-sense harness resistance, displayed by BMB R0–R6 in mOhm. Separate from group internal resistance and HV isolation. |
 
 ## Initial compatibility profile
 
